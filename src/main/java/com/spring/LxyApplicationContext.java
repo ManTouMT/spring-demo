@@ -24,13 +24,13 @@ public class LxyApplicationContext {
         //   启动的时候创建好单例bean
         for(Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()){
             BeanDefinition beanDefinition = entry.getValue();
-            Object bean = createBean(beanDefinition);
+            Object bean = createBean(entry.getKey(), beanDefinition);
             singletonMap.put(entry.getKey(), bean);
         }
 
     }
     
-    public Object createBean(BeanDefinition beanDefinition) {
+    public Object createBean(String beanName, BeanDefinition beanDefinition) {
         Class<?> clazz = beanDefinition.getClazz();
         try {
             Object instance = clazz.getDeclaredConstructor().newInstance();
@@ -39,9 +39,17 @@ public class LxyApplicationContext {
             for(Field field : clazz.getDeclaredFields()){
                 if (field.isAnnotationPresent(Autowired.class)) {
                     Object bean = getBean(field.getName());
+                    Autowired declaredAnnotation = field.getDeclaredAnnotation(Autowired.class);
+                    if (bean == null && declaredAnnotation.required()) {
+                        throw new RuntimeException("Required @Autowired annotation not found");
+                    }
                     field.setAccessible(true);
                     field.set(instance, bean);
                 }
+            }
+
+            if (instance instanceof BeanNameAware) {
+                ((BeanNameAware) instance).setBeanName(beanName);
             }
             return instance;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
@@ -96,7 +104,7 @@ public class LxyApplicationContext {
             if (beanDefinition.getScope().equals("singleton")) {
                 return singletonMap.get(beanName);
             } else {
-                return createBean(beanDefinition);
+                return createBean(beanName, beanDefinition);
             }
         } else {
             throw new NullPointerException("beanName not in the definitionMap:" + beanName);
