@@ -1,6 +1,9 @@
 package com.spring;
 
+import com.lxy.service.Autowired;
+
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Map;
@@ -30,7 +33,17 @@ public class LxyApplicationContext {
     public Object createBean(BeanDefinition beanDefinition) {
         Class<?> clazz = beanDefinition.getClazz();
         try {
-            return clazz.getDeclaredConstructor().newInstance();
+            Object instance = clazz.getDeclaredConstructor().newInstance();
+            
+            //依赖注入
+            for(Field field : clazz.getDeclaredFields()){
+                if (field.isAnnotationPresent(Autowired.class)) {
+                    Object bean = getBean(field.getName());
+                    field.setAccessible(true);
+                    field.set(instance, bean);
+                }
+            }
+            return instance;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
