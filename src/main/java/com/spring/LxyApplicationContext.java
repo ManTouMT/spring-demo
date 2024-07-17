@@ -48,8 +48,13 @@ public class LxyApplicationContext {
                 }
             }
 
+            //aware回调
             if (instance instanceof BeanNameAware) {
                 ((BeanNameAware) instance).setBeanName(beanName);
+            }
+            
+            if(instance instanceof InitializingBean){
+                ((InitializingBean) instance).afterPropertiesSet();
             }
             return instance;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
