@@ -6,7 +6,7 @@ import com.spring.Component;
 import com.spring.InitializingBean;
 
 @Component("userService")
-public class UserService implements BeanNameAware, InitializingBean {
+public class UserService implements BeanNameAware, InitializingBean, User {
     @Autowired
     private OrderService orderService;
 
@@ -30,8 +30,18 @@ public class UserService implements BeanNameAware, InitializingBean {
         System.out.println("userService初始化");
     }
 
-
-    public void setAString(String string) {
-        this.string = string;
+    @Override
+    public void proxyTest() {
+        System.out.println("实现user接口");
     }
+
+    @Override
+    public void proxyTest2() {
+        System.out.println("实现user接口2");
+    }
+
+    // beanPostProcessor测试时使用
+//    public void setAString(String string) {
+//        this.string = string;
+//    }
 }
